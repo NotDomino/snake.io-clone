@@ -5,6 +5,7 @@ signal died  # For future game over handling
 var parent: Node  # Cache for add_segment perf
 var body_segments = []  # Array for tail nodes later
 var points: int = 0  # Total eaten; drives scale/growth
+var total_points: int = 0 
 var next_growth_cost: int = 1  # Starts low; increases per segment
 var growth_multiplier: float = 1.2  # Exponent base; tweak for balance (1.1-1.5)
 var speed = 300  # Pixels per second, optimized for smooth web perf
@@ -18,6 +19,8 @@ var segment_size = 16
 var next_direction = direction
 var follow_speed: float = speed / segment_size
 var is_dying: bool = false  # Avoids double-die on mutual hits
+var username: String = "Bot"
+
 
 var skin_colors: Array[Color] = [
 	Color(1.0, 0.3, 0.3), Color(0.8, 0.2, 0.2), Color(1.0, 0.5, 0.5),
@@ -97,10 +100,12 @@ func _on_area_entered(area: Area2D):
 		var kill_fx = create_tween()
 		kill_fx.tween_property(self, "modulate", Color(1,0.5,0.5), 0.1)
 		kill_fx.tween_property(self, "modulate", Color(1,1,1), 0.1)
+	
 	if area.is_in_group("Food"):
 		area.call_deferred("queue_free")
 		get_parent().foods.erase(area)
 		points += area.food_value
+		total_points += area.food_value  # Base eat score
 		while points >= next_growth_cost:
 			add_segment()
 			points -= next_growth_cost
