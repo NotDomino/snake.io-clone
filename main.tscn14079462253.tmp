@@ -1,0 +1,44 @@
+[gd_scene load_steps=10 format=3 uid="uid://ukyxuh8tegn"]
+
+[ext_resource type="Script" uid="uid://ln4pccee6du0" path="res://main.gd" id="1_0xm2m"]
+[ext_resource type="Script" uid="uid://cyrgxn1ka178m" path="res://snake_head.gd" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://b5x8gdvwf2mwd" path="res://food.tscn" id="2_272bh"]
+[ext_resource type="Script" uid="uid://neeo7itqeuhy" path="res://arena_boundary.gd" id="2_h2yge"]
+[ext_resource type="Texture2D" uid="uid://defku1jpgspch" path="res://arena.png" id="3_1bvp3"]
+[ext_resource type="Texture2D" uid="uid://c4sn3kvsnclrp" path="res://green_circle.png" id="5_lquwl"]
+[ext_resource type="Script" uid="uid://cwmum4vuw1yw1" path="res://camera.gd" id="6_7mycd"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_0xm2m"]
+radius = 578.008
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_h2yge"]
+size = Vector2(16, 16)
+
+[node name="main" type="Node2D"]
+script = ExtResource("1_0xm2m")
+food_scene = ExtResource("2_272bh")
+
+[node name="ArenaBoundary" type="StaticBody2D" parent="."]
+position = Vector2(640, 360)
+script = ExtResource("2_h2yge")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ArenaBoundary"]
+shape = SubResource("CircleShape2D_0xm2m")
+
+[node name="Sprite2D" type="Sprite2D" parent="ArenaBoundary"]
+texture = ExtResource("3_1bvp3")
+
+[node name="SnakeHead" type="Area2D" parent="."]
+script = ExtResource("1_ig7tw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SnakeHead"]
+shape = SubResource("RectangleShape2D_h2yge")
+
+[node name="Sprite2D" type="Sprite2D" parent="SnakeHead"]
+texture = ExtResource("5_lquwl")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position_smoothing_enabled = true
+script = ExtResource("6_7mycd")
+
+[node name="Food" parent="." instance=ExtResource("2_272bh")]

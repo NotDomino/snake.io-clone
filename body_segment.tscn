@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3 uid="uid://pejy3klv2ash"]
+
+[ext_resource type="Texture2D" uid="uid://cvvx6ow7gy8jd" path="res://white_circle_ring.png" id="1_bv17x"]
+[ext_resource type="Texture2D" uid="uid://bdktmrdsr8juy" path="res://white_inner_circle.png" id="2_bbnit"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_kek77"]
+radius = 16.0
+
+[node name="BodySegment" type="Area2D"]
+y_sort_enabled = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_kek77")
+
+[node name="WhiteCircleRing" type="Sprite2D" parent="."]
+modulate = Color(0, 1, 0, 1)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("1_bv17x")
+
+[node name="WhiteInnerCircle" type="Sprite2D" parent="."]
+modulate = Color(0, 1, 0, 1)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_bbnit")

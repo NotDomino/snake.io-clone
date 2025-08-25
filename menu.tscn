@@ -1,0 +1,36 @@
+[gd_scene load_steps=2 format=3 uid="uid://dwmi0fhdgqkf2"]
+
+[ext_resource type="Script" uid="uid://dfj67a1qai26k" path="res://menu.gd" id="1_lti8b"]
+
+[node name="Menu" type="Control"]
+custom_minimum_size = Vector2(1280, 720)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 200.0
+offset_bottom = 200.0
+script = ExtResource("1_lti8b")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Snake.IO clone"
+horizontal_alignment = 1
+
+[node name="StartButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Start"
+
+[node name="Quit" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Quit"
+
+[connection signal="pressed" from="VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/Quit" to="." method="_on_quit_pressed"]

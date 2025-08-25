@@ -1,0 +1,61 @@
+[gd_scene load_steps=12 format=3 uid="uid://ukyxuh8tegn"]
+
+[ext_resource type="Script" uid="uid://ln4pccee6du0" path="res://main.gd" id="1_0xm2m"]
+[ext_resource type="Script" uid="uid://cyrgxn1ka178m" path="res://snake_head.gd" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://b5x8gdvwf2mwd" path="res://food.tscn" id="2_272bh"]
+[ext_resource type="Script" uid="uid://neeo7itqeuhy" path="res://arena_boundary.gd" id="2_h2yge"]
+[ext_resource type="Texture2D" uid="uid://defku1jpgspch" path="res://arena.png" id="3_1bvp3"]
+[ext_resource type="Script" uid="uid://cwmum4vuw1yw1" path="res://camera.gd" id="6_7mycd"]
+[ext_resource type="Texture2D" uid="uid://bdktmrdsr8juy" path="res://white_inner_circle.png" id="8_kek77"]
+[ext_resource type="Texture2D" uid="uid://cvvx6ow7gy8jd" path="res://white_circle_ring.png" id="9_4c57u"]
+[ext_resource type="PackedScene" uid="uid://pejy3klv2ash" path="res://body_segment.tscn" id="9_kek77"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_0xm2m"]
+radius = 600.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_4c57u"]
+radius = 16.0
+
+[node name="main" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_0xm2m")
+food_scene = ExtResource("2_272bh")
+
+[node name="ArenaBoundary" type="Area2D" parent="."]
+position = Vector2(430, 270)
+script = ExtResource("2_h2yge")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ArenaBoundary"]
+shape = SubResource("CircleShape2D_0xm2m")
+
+[node name="Sprite2D" type="Sprite2D" parent="ArenaBoundary"]
+texture = ExtResource("3_1bvp3")
+
+[node name="SnakeHead" type="Area2D" parent="."]
+y_sort_enabled = true
+collision_layer = 2
+script = ExtResource("1_ig7tw")
+segment_scene = ExtResource("9_kek77")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SnakeHead"]
+shape = SubResource("CircleShape2D_4c57u")
+
+[node name="WhiteCircleRing" type="Sprite2D" parent="SnakeHead"]
+modulate = Color(0, 1, 0, 1)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("9_4c57u")
+
+[node name="WhiteInnerCircle" type="Sprite2D" parent="SnakeHead"]
+modulate = Color(0, 1, 0, 1)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("8_kek77")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position_smoothing_enabled = true
+script = ExtResource("6_7mycd")
+
+[node name="BodySegment" parent="." instance=ExtResource("9_kek77")]
+visible = false
+position = Vector2(-13, 12)
+collision_layer = 2
+collision_mask = 3

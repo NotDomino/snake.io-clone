@@ -1,0 +1,36 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="snake.io clone"
+run/main_scene="uid://ukyxuh8tegn"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Global="*res://global.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[physics]
+
+common/physics_ticks_per_second=120
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=2
+environment/defaults/default_clear_color=Color(0.0274813, 0.0333891, 0.053063, 1)
