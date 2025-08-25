@@ -26,9 +26,9 @@ var follow_speed: float = speed / segment_size
 
 var is_dying: bool = false  # Avoids double-die on mutual hits
 
+
 func _ready() -> void:
 	parent = get_parent()
-	add_to_group("SnakeHead")  # Enables general collision detection
 	area_entered.connect(_on_area_entered)
 	area_exited.connect(_on_area_exited)
 
@@ -75,9 +75,7 @@ func update_body_segments(delta):
 		var distance = seg.position.distance_to(prev_pos)
 		if distance > segment_size:
 			seg.position = seg.position.lerp(prev_pos - target_dir * segment_size, follow_speed * delta)  # Offset maintains spacing; smoother web convergence
-			seg.position += Vector2(
-				sin(Time.get_ticks_msec() * 0.01 + body_segments.find(seg) * 0.5), 
-				cos(Time.get_ticks_msec() * 0.01 + body_segments.find(seg) * 0.5)) * 1  # firefly bob
+			
 		prev_pos = seg.position
 		prev_dir = target_dir
 
@@ -91,17 +89,17 @@ func add_segment():
 		
 	body_segments.append(new_seg)
 	new_seg.snake = self
-	new_seg.add_to_group("SnakeBody")
 	var new_scale = 1.0 + (body_segments.size() * 0.01)  # Linear girth; caps ~2x at 100 length, tweak 0.005-0.02
-	modulate = Color(1, 1 - (body_segments.size() * 0.005), 1 - (body_segments.size() * 0.005))  # Reddens as grows for 'heated' playful menace, zero-cost tint ramp
+	# Reddens as grows for 'heated' playful menace, zero-cost tint ramp
+	modulate = Color(1, 1 - (body_segments.size() * 0.005), 1 - (body_segments.size() * 0.005))  
 	scale = Vector2(new_scale, new_scale)
 	for seg in body_segments:
 		seg.scale = Vector2(new_scale, new_scale)
-	new_seg.modulate = Color(1, randf_range(0.5,1), randf_range(0.5,1))  # Pastel hues
-	parent.add_child(new_seg)
-	var eat_tween = create_tween()
-	eat_tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.1)
-	eat_tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
+	new_seg.modulate = Color(randf_range(0.8, 1), randf_range(0.5,1), randf_range(0.5,1))  # Pastel hues
+	parent.call_deferred("add_child", new_seg)  # Defer for flush safety; minimal web delay
+	#var eat_tween = create_tween()
+	#eat_tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.1)
+	#eat_tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
 
 
 
@@ -117,13 +115,13 @@ func _on_area_entered(area: Area2D):
 		var kill_fx = create_tween(); kill_fx.tween_property(self, "modulate", Color(1,0.5,0.5), 0.1);
 		kill_fx.tween_property(self, "modulate", Color(1,1,1), 0.1)  # Red flash on kill for playful feedback, zero extra nodes
 	if area.is_in_group("Food"):
-		area.queue_free()
+		area.call_deferred("queue_free")
 		points += area.food_value
 		while points >= next_growth_cost:
 			add_segment()
 			points -= next_growth_cost
 			next_growth_cost = int(next_growth_cost * growth_multiplier) + 1
-			
+
 
 func _on_area_exited(area: Area2D):
 	if area.name == "ArenaBoundary" and not is_dying:

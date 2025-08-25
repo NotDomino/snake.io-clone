@@ -27,10 +27,12 @@ var target_pos: Vector2 = position
 var wander_angle: float = 0.0
 var is_dying: bool = false  # Flag avoids double-die signals on mutual head-head
 
+
+
 func _ready() -> void:
 	parent = get_parent()
 	ai_timer = Timer.new()
-	ai_timer.wait_time = 0.5
+	ai_timer.wait_time = 0.2
 	ai_timer.autostart = true
 	ai_timer.timeout.connect(_update_ai_target)
 	add_child(ai_timer)
@@ -84,9 +86,7 @@ func update_body_segments(delta):
 		var distance = seg.position.distance_to(prev_pos)
 		if distance > segment_size:
 			seg.position = seg.position.lerp(prev_pos - target_dir * segment_size, follow_speed * delta)
-			seg.position += Vector2(
-				sin(Time.get_ticks_msec() * 0.01 + body_segments.find(seg) * 0.5), 
-				cos(Time.get_ticks_msec() * 0.01 + body_segments.find(seg) * 0.5)) * 1  # firefly bob
+			
 		prev_pos = seg.position
 		prev_dir = target_dir
 
@@ -132,6 +132,7 @@ func _on_area_entered(area: Area2D):
 			burst_tween.parallel().tween_property(seg, "scale", Vector2(1.5,1.5), 0.3)  # Playful fade-pop anim before free, low-cost parallel
 	if area.is_in_group("Food"):
 		area.queue_free()
+		get_parent().foods.erase(area)  # Cache remove; fast array
 		points += area.food_value
 		while points >= next_growth_cost:
 			add_segment()
@@ -146,10 +147,16 @@ func _on_area_exited(area: Area2D):
 
 
 func _update_ai_target():
-	var foods = get_tree().get_nodes_in_group("Food")
-	if foods.is_empty():  # Wander if none
+	var foods = get_parent().foods  # Cache access; fast
+	if foods.is_empty():
 		wander_angle += randf_range(-PI/4, PI/4)
 		target_pos = position + direction * 100 + Vector2(cos(wander_angle), sin(wander_angle)) * 50
 	else:
-		foods.sort_custom(func(a,b): return a.position.distance_squared_to(position) < b.position.distance_squared_to(position))  # Fast sq dist sort; top 1
-		target_pos = foods[0].position
+		var nearest_food = foods[0]
+		var min_dist_sq = position.distance_squared_to(nearest_food.position)
+		for food in foods.slice(1):
+			var dist_sq = position.distance_squared_to(food.position)
+			if dist_sq < min_dist_sq:
+				min_dist_sq = dist_sq
+				nearest_food = food
+		target_pos = nearest_food.position

@@ -9,6 +9,8 @@ var arena_center
 var arena_radius
 
 var enemies: Array = []  # Track for web-opt iteration (no heavy groups)
+var foods: Array = []  # Cache for opt access; web-fast array ops
+var enemy_pool: Array = []  # Pre-alloc; size to max expected (e.g., 30 >20)
 
 var target_food_density: int = 1  # Per 100x100 area; tweak for playful scatter without web node overload (aim <500 total)
 var center_bonus: float = 3.0  # Max density multiplier at exact center; tweak 2-5 for balance
@@ -28,8 +30,14 @@ func _ready():
 		snake_head.add_segment()
 	
 	
-	for i in 20:  # Bot count; low for web perf (<500 nodes total with segments)
-		spawn_enemy()
+	for i in 30:  # Oversize pool for buffer; web-instantiate only at load
+		var enemy = enemy_scene.instantiate()
+		enemy.visible = false
+		enemy.process_mode = Node.PROCESS_MODE_DISABLED
+		add_child(enemy)  # Tree early for refs
+		enemy_pool.append(enemy)
+	for i in 20:
+		activate_enemy()
 		
 	snake_head.died.connect(_on_snake_died)
 	
@@ -37,9 +45,11 @@ func _ready():
 
 
 func _process(delta):
+	$%FPS.text = str(Engine.get_frames_per_second())
 	var cam_rect = get_viewport_rect()  # Simpler bounds; assumes camera centered on head, web-opt no inverse
 	cam_rect.position = snake_head.position - cam_rect.size / 2  # Offset to player view
-	var near_foods = get_tree().get_nodes_in_group("Food").filter(func(f): return cam_rect.has_point(f.position) or f.position.distance_to(snake_head.position) < 2000)
+	foods = foods.filter(is_instance_valid)  # Prune freed refs; web-safe array clean to avoid crashes
+	var near_foods = foods.filter(func(f): return cam_rect.has_point(f.position) or f.position.distance_to(snake_head.position) < 2000)
 	var dist_to_center = snake_head.position.distance_to(arena_center)
 	var effective_density = target_food_density * (1 + center_bonus / (1 + dist_to_center / arena_radius * 0.1))  # Falloff bias; denser central, normalizes to radius scale
 	var target_count = effective_density * (cam_rect.size.x * cam_rect.size.y / 10000.0)
@@ -56,18 +66,32 @@ func spawn_enemy():
 	enemy.modulate = Color(randf_range(0.5,1), randf_range(0.5,1), randf_range(0.5,1))  # Unique hues for playful bot variety
 	enemy.area_entered.connect(_on_enemy_collision.bind(enemy))  # Handle hits; define below
 	enemy.died.connect(_on_enemy_died.bind(enemy))  # Respawn
+	enemies.append(enemy)
 	add_child(enemy)
+
+
+func activate_enemy():
+	if enemy_pool.is_empty(): return  # Fallback; rare on web
+	var enemy = enemy_pool.pop_front()
+	var angle = randf() * TAU
+	var dist = sqrt(randf()) * arena_radius * 0.8
+	enemy.position = arena_center + Vector2(cos(angle), sin(angle)) * dist
+	enemy.visible = true
+	enemy.process_mode = Node.PROCESS_MODE_INHERIT
+	enemy.area_entered.connect(_on_enemy_collision.bind(enemy))
+	enemy.died.connect(_on_enemy_died.bind(enemy))
 	enemies.append(enemy)
 
 
 func spawn_food():
 	var food = food_scene.instantiate()
 	var angle = randf() * TAU
-	var dist = sqrt(randf()) * 1000  # 0-1000 uniform area; far enough for scatter, close for respawn perf
+	var dist = sqrt(randf()) * 1000
 	food.position = snake_head.position + Vector2(cos(angle), sin(angle)) * dist
 	food.scale = Vector2(randf_range(0.8,1.2), randf_range(0.8,1.2))
 	food.food_value = randi_range(1, 3)
-	add_child(food)
+	call_deferred("add_child", food)  # Safe during physics flush; web-opt defer
+	foods.append(food)
 
 
 func _on_food_eaten(body: Node2D, food: Area2D):
@@ -108,6 +132,11 @@ func _on_enemy_died(enemy: Area2D):
 		food.food_value = 1
 		food.scale *= 1.2; food.modulate = Color(1,0.8,0)  # Slightly larger golden drops for playful loot glow, zero extra vram
 		add_child(food)
+	
+	enemy.visible = false
+	enemy.process_mode = Node.PROCESS_MODE_DISABLED
+	enemies.erase(enemy)
+	enemy_pool.append(enemy)  # Recycle; zero alloc stutter
 	for seg in enemy.body_segments:
 		seg.queue_free()
 	enemy.body_segments.clear()

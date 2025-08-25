@@ -25,6 +25,13 @@ follow_viewport_scale = 1.23
 script = ExtResource("11_efxa6")
 
 [node name="Score" type="Label" parent="UI"]
+unique_name_in_owner = true
+offset_right = 45.0
+offset_bottom = 23.0
+text = "SCore"
+
+[node name="FPS" type="Label" parent="UI"]
+unique_name_in_owner = true
 offset_right = 45.0
 offset_bottom = 23.0
 text = "SCore"
@@ -40,7 +47,7 @@ shape = SubResource("CircleShape2D_0xm2m")
 scale = Vector2(20, 20)
 texture = ExtResource("3_1bvp3")
 
-[node name="SnakeHead" parent="." instance=ExtResource("6_5vw27")]
+[node name="SnakeHead" parent="." groups=["SnakeHead"] instance=ExtResource("6_5vw27")]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true

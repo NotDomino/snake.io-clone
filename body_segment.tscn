@@ -7,7 +7,7 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_kek77"]
 radius = 16.0
 
-[node name="BodySegment" type="Area2D"]
+[node name="BodySegment" type="Area2D" groups=["SnakeBody"]]
 y_sort_enabled = true
 script = ExtResource("1_bbnit")
 
@@ -15,11 +15,9 @@ script = ExtResource("1_bbnit")
 shape = SubResource("CircleShape2D_kek77")
 
 [node name="WhiteCircleRing" type="Sprite2D" parent="."]
-modulate = Color(0, 1, 0, 1)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_bv17x")
 
 [node name="WhiteInnerCircle" type="Sprite2D" parent="."]
-modulate = Color(0, 1, 0, 1)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("2_bbnit")
