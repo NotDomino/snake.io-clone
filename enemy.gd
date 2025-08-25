@@ -4,7 +4,6 @@ signal died  # For future game over handling
 
 @export var segment_scene: PackedScene  # Assign body_segment.tscn in Inspector
 
-var snake: Node = null  # Owner ref for collision checks; web-light null check
 var parent: Node  # Cache for add_segment perf
 var body_segments = []  # Array for tail nodes later
 
@@ -23,25 +22,35 @@ var direction = Vector2.RIGHT
 var segment_size = 16
 var next_direction = direction
 var follow_speed: float = speed / segment_size
-
-var is_dying: bool = false  # Avoids double-die on mutual hits
+var ai_timer: Timer
+var target_pos: Vector2 = position
+var wander_angle: float = 0.0
+var is_dying: bool = false  # Flag avoids double-die signals on mutual head-head
 
 func _ready() -> void:
 	parent = get_parent()
-	add_to_group("SnakeHead")  # Enables general collision detection
+	ai_timer = Timer.new()
+	ai_timer.wait_time = 0.5
+	ai_timer.autostart = true
+	ai_timer.timeout.connect(_update_ai_target)
+	add_child(ai_timer)
+	add_to_group("SnakeHead")
+	add_to_group("Enemy")  # Optional for other logic
+	for seg in body_segments:
+		seg.add_to_group("SnakeBody")
+		seg.add_to_group("EnemyBody")  # If needed separately
 	area_entered.connect(_on_area_entered)
 	area_exited.connect(_on_area_exited)
 
 
 func _physics_process(delta):
-	var mouse_pos = get_global_mouse_position()
-	var target_dir = (mouse_pos - position).normalized()
+	var target_dir = (target_pos - position).normalized()
 	if target_dir != Vector2.ZERO:
-		next_direction = target_dir
+		next_direction = target_dir.lerp(direction, 0.1)  # Smooth turn for natural AI feel; web-vec opt
 	direction = next_direction
 	
-	is_boosting = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and body_segments.size() > 0
-	speed = boost_speed if is_boosting else base_speed
+	if position.distance_to(target_pos) < 200 and randf() < 0.05 * delta: speed = boost_speed
+	else: speed = base_speed  # Rare near-food dashes for playful aggression
 	
 	if is_boosting:
 		drain_accum += drain_rate * delta
@@ -74,7 +83,7 @@ func update_body_segments(delta):
 			seg.rotation = target_dir.angle()  # Rotate to face movement for curved worm look
 		var distance = seg.position.distance_to(prev_pos)
 		if distance > segment_size:
-			seg.position = seg.position.lerp(prev_pos - target_dir * segment_size, follow_speed * delta)  # Offset maintains spacing; smoother web convergence
+			seg.position = seg.position.lerp(prev_pos - target_dir * segment_size, follow_speed * delta)
 			seg.position += Vector2(
 				sin(Time.get_ticks_msec() * 0.01 + body_segments.find(seg) * 0.5), 
 				cos(Time.get_ticks_msec() * 0.01 + body_segments.find(seg) * 0.5)) * 1  # firefly bob
@@ -88,10 +97,11 @@ func add_segment():
 		new_seg.position = position
 	else:
 		new_seg.position = body_segments.back().position
-		
-	body_segments.append(new_seg)
+	
 	new_seg.snake = self
 	new_seg.add_to_group("SnakeBody")
+
+	body_segments.append(new_seg)
 	var new_scale = 1.0 + (body_segments.size() * 0.01)  # Linear girth; caps ~2x at 100 length, tweak 0.005-0.02
 	modulate = Color(1, 1 - (body_segments.size() * 0.005), 1 - (body_segments.size() * 0.005))  # Reddens as grows for 'heated' playful menace, zero-cost tint ramp
 	scale = Vector2(new_scale, new_scale)
@@ -110,26 +120,36 @@ func _on_area_entered(area: Area2D):
 	if area.is_in_group("SnakeBody") and area.snake != self:
 		is_dying = true
 		died.emit()
+		var burst_tween = create_tween(); for seg in body_segments:
+			burst_tween.parallel().tween_property(seg, "modulate:a", 0, 0.3);
+			burst_tween.parallel().tween_property(seg, "scale", Vector2(1.5,1.5), 0.3)  # Playful fade-pop anim before free, low-cost parallel
 	elif area.is_in_group("SnakeHead") and area != self:
 		is_dying = true
 		died.emit()
-		area.died.emit()  # Mutual kill; flag prevents loops
-		var kill_fx = create_tween(); kill_fx.tween_property(self, "modulate", Color(1,0.5,0.5), 0.1);
-		kill_fx.tween_property(self, "modulate", Color(1,1,1), 0.1)  # Red flash on kill for playful feedback, zero extra nodes
+		area.died.emit()  # Mutual; flag prevents chain loops
+		var burst_tween = create_tween(); for seg in body_segments:
+			burst_tween.parallel().tween_property(seg, "modulate:a", 0, 0.3);
+			burst_tween.parallel().tween_property(seg, "scale", Vector2(1.5,1.5), 0.3)  # Playful fade-pop anim before free, low-cost parallel
 	if area.is_in_group("Food"):
 		area.queue_free()
 		points += area.food_value
 		while points >= next_growth_cost:
 			add_segment()
 			points -= next_growth_cost
-			next_growth_cost = int(next_growth_cost * growth_multiplier) + 1
-			
+			next_growth_cost = int(next_growth_cost * growth_multiplier) + 1  # Min +1 avoids stall; web-int math fast
+
 
 func _on_area_exited(area: Area2D):
-	if area.name == "ArenaBoundary" and not is_dying:
-		is_dying = true
-		var burst_tween = create_tween()
-		for seg in body_segments:
-			burst_tween.parallel().tween_property(seg, "modulate:a", 0, 0.3)
-			burst_tween.parallel().tween_property(seg, "scale", Vector2(1.5,1.5), 0.3)
-		burst_tween.tween_callback(died.emit)  # Signal after anim; web-delay free for visual pop
+	if area.name == "ArenaBoundary":
+		died.emit()
+		queue_free()  # Temp; add particle burst later for playful death
+
+
+func _update_ai_target():
+	var foods = get_tree().get_nodes_in_group("Food")
+	if foods.is_empty():  # Wander if none
+		wander_angle += randf_range(-PI/4, PI/4)
+		target_pos = position + direction * 100 + Vector2(cos(wander_angle), sin(wander_angle)) * 50
+	else:
+		foods.sort_custom(func(a,b): return a.position.distance_squared_to(position) < b.position.distance_squared_to(position))  # Fast sq dist sort; top 1
+		target_pos = foods[0].position

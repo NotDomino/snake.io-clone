@@ -1,5 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://pejy3klv2ash"]
+[gd_scene load_steps=5 format=3 uid="uid://pejy3klv2ash"]
 
+[ext_resource type="Script" uid="uid://d14sb5dn12tnf" path="res://body_segment.gd" id="1_bbnit"]
 [ext_resource type="Texture2D" uid="uid://cvvx6ow7gy8jd" path="res://white_circle_ring.png" id="1_bv17x"]
 [ext_resource type="Texture2D" uid="uid://bdktmrdsr8juy" path="res://white_inner_circle.png" id="2_bbnit"]
 
@@ -8,6 +9,7 @@ radius = 16.0
 
 [node name="BodySegment" type="Area2D"]
 y_sort_enabled = true
+script = ExtResource("1_bbnit")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_kek77")
