@@ -1,7 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://dtcs2fonkf2iq"]
+[gd_scene load_steps=5 format=3 uid="uid://dtcs2fonkf2iq"]
 
-[ext_resource type="Script" uid="uid://cyrgxn1ka178m" path="res://snake_head.gd" id="1_numk7"]
-[ext_resource type="PackedScene" uid="uid://pejy3klv2ash" path="res://body_segment.tscn" id="2_q74ag"]
+[ext_resource type="Script" uid="uid://dgyjjvgxa6oek" path="res://player_snake.gd" id="1_idn06"]
 [ext_resource type="Texture2D" uid="uid://cvvx6ow7gy8jd" path="res://white_circle_ring.png" id="3_uc0p3"]
 [ext_resource type="Texture2D" uid="uid://bdktmrdsr8juy" path="res://white_inner_circle.png" id="4_kormv"]
 
@@ -11,8 +10,7 @@ radius = 16.0
 [node name="SnakeHead" type="Area2D"]
 y_sort_enabled = true
 collision_layer = 2
-script = ExtResource("1_numk7")
-segment_scene = ExtResource("2_q74ag")
+script = ExtResource("1_idn06")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_4c57u")

@@ -1,7 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://d4jadokw86g2p"]
+[gd_scene load_steps=5 format=3 uid="uid://d4jadokw86g2p"]
 
-[ext_resource type="Script" uid="uid://b8jxnhiliuqk0" path="res://enemy.gd" id="1_qi2p4"]
-[ext_resource type="PackedScene" uid="uid://pejy3klv2ash" path="res://body_segment.tscn" id="2_epg4t"]
+[ext_resource type="Script" uid="uid://b8jxnhiliuqk0" path="res://enemy_snake.gd" id="1_qi2p4"]
 [ext_resource type="Texture2D" uid="uid://cvvx6ow7gy8jd" path="res://white_circle_ring.png" id="3_3yqyl"]
 [ext_resource type="Texture2D" uid="uid://bdktmrdsr8juy" path="res://white_inner_circle.png" id="4_wujgv"]
 
@@ -12,7 +11,6 @@ radius = 16.0
 y_sort_enabled = true
 collision_layer = 2
 script = ExtResource("1_qi2p4")
-segment_scene = ExtResource("2_epg4t")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_4c57u")

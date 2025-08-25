@@ -4,6 +4,8 @@ extends Area2D
 @onready var white_inner_circle: Sprite2D = $WhiteInnerCircle
 @onready var white_circle_ring: Sprite2D = $WhiteCircleRing
 
+
+
 var initial_pos: Vector2
 var wiggle_phase: float = randf() * TAU  # Random start per food for desync variety
 var wiggle_speed: float = randf_range(1.0, 2.0)  # Per-food variance; playful without perf hit

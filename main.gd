@@ -16,6 +16,9 @@ var target_food_density: int = 1  # Per 100x100 area; tweak for playful scatter 
 var center_bonus: float = 3.0  # Max density multiplier at exact center; tweak 2-5 for balance
 
 
+
+
+
 func _ready():
 	snake_head.area_entered.connect(func(area): if area.is_in_group("Food"): spawn_food())  # Respawn on eat
 	
@@ -76,6 +79,7 @@ func activate_enemy():
 	var angle = randf() * TAU
 	var dist = sqrt(randf()) * arena_radius * 0.8
 	enemy.position = arena_center + Vector2(cos(angle), sin(angle)) * dist
+	enemy.skin_hue_offset = randi_range(0, enemy.skin_colors.size() - 1)  # Per-bot shift for varied rainbow starts;
 	enemy.visible = true
 	enemy.process_mode = Node.PROCESS_MODE_INHERIT
 	enemy.area_entered.connect(_on_enemy_collision.bind(enemy))
